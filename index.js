@@ -11,11 +11,11 @@ import makeWASocket, {
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
   DisconnectReason
-} from '@whiskeysockets/baileys';('@whiskeysockets/baileys');
+} from '@whiskeysockets/baileys';
 
 const settings  = require('./settings');
 const { handleMessage }  = require('./case');
-const { handleAntiDelete, checkAntilink, checkAntiMedia, handleAntiCall, handleGroupParticipantsUpdate } = require('./helper/listeners');
+const { handleAntiDelete, checkAntilink, checkAntiMedia } = require('./lib/antidelete.js');
 const {
   sessionExists, listSessions, deleteSession, sessionDir,
   getWaSettings, setWaSetting, getAllPairs, getUserPairs,
