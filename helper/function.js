@@ -1,24 +1,36 @@
+ const fs = require('fs');
+const path = require('path');
+const settings = require('../settings');
+function sessionDir(id) {
+  return path.join(settings.SESSION_DIR || './sessions', id || '');
+}
+function sessionExists(id) {
+  try { return fs.existsSync(sessionDir(id)); } catch { return false; }
+}
+function listSessions() {
+  try { 
+    const dir = settings.SESSION_DIR || './sessions';
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir); 
+  } catch { return []; }
+}
+function deleteSession(id) {
+  try { fs.rmSync(sessionDir(id), {recursive:true, force:true}); return true; } catch { return false; }
+}
+function getWaSettings() { return {}; }
+function setWaSetting(k,v) { return true; }
+function getAllPairs() { return []; }
+function getUserPairs() { return []; }
+function addPair() { return true; }
+function removePair() { return true; }
+function getAllPairedSessions() { return []; }
+function registerUser() { return true; }
+function getAllUsers() { return []; }
+function numOf() { return 0; }
+
 module.exports = {
-  getBuffer: async (url) => {
-    return Buffer.from([]);
-  },
-  fetchJson: async (url, options) => {
-    try {
-      const res = await fetch(url, options);
-      return await res.json();
-    } catch { return {}; }
-  },
-  runtime: (seconds) => {
-    seconds = Number(seconds);
-    var d = Math.floor(seconds / (3600 * 24));
-    var h = Math.floor(seconds % (3600 * 24) / 3600);
-    var m = Math.floor(seconds % 3600 / 60);
-    var s = Math.floor(seconds % 60);
-    var dDisplay = d > 0 ? d + (d == 1 ? " day, " : " days, ") : "";
-    var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
-    var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
-    var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
-    return dDisplay + hDisplay + mDisplay + sDisplay;
-  },
-  sleep: async (ms) => { return new Promise(resolve => setTimeout(resolve, ms)); }
+  sessionExists, listSessions, deleteSession, sessionDir,
+  getWaSettings, setWaSetting, getAllPairs, getUserPairs,
+  addPair, removePair, getAllPairedSessions,
+  registerUser, getAllUsers, numOf
 };
