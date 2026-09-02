@@ -1,6 +1,4 @@
-//This base is created by Styven Emmael old Lord Minato
-'use strict';
-import { createRequire } from 'module';
+import  { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const chalk = require('chalk');
 const pino = require('pino');
