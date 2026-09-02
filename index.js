@@ -22,13 +22,16 @@ const {
   addPair, removePair, getAllPairedSessions,
   registerUser, getAllUsers, numOf,
 } = require('./helper/function');
-const { normalizeJid, ensureDir, formatUptime } = require('./helper/utils');
+const { normalizeJid, formatUptime } = require('./helper/utils');
+const ensureDir = (d) => { try { require('fs').mkdirSync(d, {recursive:true}); } catch {} };
 const { logInfo, logSuccess, logWarn, logError, logSession } = require('./helper/logger');
 
 global.botStartTime = Date.now();
-ensureDir(settings.SESSION_DIR);
-ensureDir('./database');
 
+const fsx = require('fs');
+try { fsx.mkdirSync(settings.SESSION_DIR, {recursive:true}); } catch {}
+try { fsx.mkdirSync('./database', {recursive:true}); } catch {}
+try { fsx.mkdirSync('./src/database', {recursive:true}); } catch {}
 const activeSockets = new Map();
 const notifiedConnected = new Set();
 const pendingReplies = new Map();
