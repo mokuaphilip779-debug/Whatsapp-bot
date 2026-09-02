@@ -1,4 +1,4 @@
-const chalk = require('chalk');
+ const chalk = require('chalk');
 module.exports = {
   logInfo: (m) => console.log(chalk.blue('[INFO]'), m),
   logSuccess: (m) => console.log(chalk.green('[SUCCESS]'), m),
