@@ -1,17 +1,17 @@
-//This base is created by Styven Emmanel old Lord Minato Dev
+//This base is created by Styven Emmael old Lord Minato
 'use strict';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const chalk = require('chalk');
-const pino  = require('pino');
+const pino = require('pino');
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
-
-const {
-  default: makeWASocket,
+import makeWASocket, {
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
   makeCacheableSignalKeyStore,
-  DisconnectReason,
-} = require('@whiskeysockets/baileys');
+  DisconnectReason
+} from '@whiskeysockets/baileys';('@whiskeysockets/baileys');
 
 const settings  = require('./settings');
 const { handleMessage }  = require('./case');
