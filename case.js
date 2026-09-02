@@ -637,9 +637,10 @@ async function BlankKing(minato, target) {
                 {
                   name: "single_select",
                   buttonParamsJson: JSON.stringify({
-                    icon: ""
-                    flow_cta: "{}"
-                    flow_message_version: "3"
+                                  icon: "",
+              footer: "something",
+              flow_cta: "{}",
+              flow_message_version: "3"
                   })
                 },
                 {
