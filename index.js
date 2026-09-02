@@ -20,8 +20,8 @@ const {
   addPair, removePair, getAllPairedSessions,
   registerUser, getAllUsers, numOf,
 } = require('./helper/function.js');
-const { normalizeJid, ensureDir, formatUptime } = require('./helper/utils');
-const { logInfo, logSuccess, logWarn, logError, logSession } = require('./helper/logger');
+const { normalizeJid, ensureDir, formatUptime } = require('./lib/utils.js');
+const { logInfo, logSuccess, logWarn, logError, logSession } = require('./lib/logger.js');
 
 global.botStartTime = Date.now();
 ensureDir(settings.SESSION_DIR);
