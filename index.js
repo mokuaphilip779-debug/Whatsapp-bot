@@ -1,28 +1,61 @@
-import  { createRequire } from 'module';
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
+
+import makeWASocket, { 
+  useMultiFileAuthState, 
+  fetchLatestBaileysVersion, 
+  makeCacheableSignalKeyStore, 
+  DisconnectReason 
+} from '@whiskeysockets/baileys';
+
 const chalk = require('chalk');
 const pino = require('pino');
 const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
-import makeWASocket, {
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
-  DisconnectReason
-} from '@whiskeysockets/baileys';
+import path from 'path';
 
-const settings  = require('./settings.js');
-const { handleMessage }  = require('./case.js');
-const { handleAntiDelete, checkAntilink, checkAntiMedia } = require('./lib/antidelete.js');
-const {
-  sessionExists, listSessions, deleteSession, sessionDir,
-  getWaSettings, setWaSetting, getAllPairs, getUserPairs,
-  addPair, removePair, getAllPairedSessions,
-  registerUser, getAllUsers, numOf,
-} = require('./helper/function.js');
-const { normalizeJid, ensureDir, formatUptime } = require('./lib/utils.js');
-const { logInfo, logSuccess, logWarn, logError, logSession } = require('./lib/logger.js');
+import settings from './settings.js';
+import { handleMessage } from './case.js';
+import { handleAntiDelete, checkAntilink, checkAntiMedia } from './lib/antidelete.js';
+import { sessionExists, listSessions, deleteSession, sessionDir, getWaSettings, setWaSetting, getAllPairs, getUserPairs, addPair, removePair, getAllPairedSessions, registerUser, getAllUsers, numOf } from './helper/function.js';
+import { normalizeJid, ensureDir, formatUptime } from './lib/utils.js';
+import { logInfo, logSuccess, logWarn, logError, logSession } from './lib/logger.js';
 
+global.botStartTime = Date.now();
+ensureDir(settings.SESSION_DIR);
+ensureDir('./database');
+
+const activeSockets = new Map();
+const notifiedConnected = new Set();
+const pendingReplies = new Map();
+
+let bannedUsers = new Set();
+const BANNED_FILE = './banned-users.json';
+
+function loadBannedUsers() {
+  try {
+    if (fs.existsSync(BANNED_FILE)) {
+      const data = JSON.parse(fs.readFileSync(BANNED_FILE));
+      bannedUsers = new Set(data);
+    }
+  } catch (error) {
+    console.error("Error loading banned users:", error);
+  }
+}
+
+function saveBannedUsers() {
+  try {
+    fs.writeFileSync(BANNED_FILE, JSON.stringify([...bannedUsers]));
+  } catch (error) {
+    console.error("Error saving banned users:", error);
+  }
+}
+
+function isUserBanned(userId) {
+  return bannedUsers.has(userId.toString());
+}
+
+loadBannedUsers();
 global.botStartTime = Date.now();
 ensureDir(settings.SESSION_DIR);
 ensureDir('./database');
