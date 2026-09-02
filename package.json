@@ -7,7 +7,7 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^5.0.0
+    "@whiskeysockets/baileys": "^5.0.0",
     "axios": "^1.6.0",
     "chalk": "^4.1.2",
     "dotenv": "^16.3.1",
