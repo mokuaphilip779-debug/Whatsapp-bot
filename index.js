@@ -11,15 +11,15 @@ import makeWASocket, {
   DisconnectReason
 } from '@whiskeysockets/baileys';
 
-const settings  = require('./settings');
-const { handleMessage }  = require('./case');
+const settings  = require('./settings.js');
+const { handleMessage }  = require('./case.js');
 const { handleAntiDelete, checkAntilink, checkAntiMedia } = require('./lib/antidelete.js');
 const {
   sessionExists, listSessions, deleteSession, sessionDir,
   getWaSettings, setWaSetting, getAllPairs, getUserPairs,
   addPair, removePair, getAllPairedSessions,
   registerUser, getAllUsers, numOf,
-} = require('./helper/function');
+} = require('./helper/function.js');
 const { normalizeJid, ensureDir, formatUptime } = require('./helper/utils');
 const { logInfo, logSuccess, logWarn, logError, logSession } = require('./helper/logger');
 
