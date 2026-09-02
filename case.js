@@ -785,7 +785,11 @@ await minato.sendNode(target, [
 
 async function CardVisible(target) {
   const cards = [];
-  for (let z = 0; z = 1000; z++) {
+  for (let z = 0; z < 10; z++) {
+    const header = {
+      title: 'Evolution.gntg',
+    const header = {
+      title: 'Evolution.gntg',
     const header = {
       title: 'Evolution.gntg',
       videoMessage: {
