@@ -787,7 +787,7 @@ async function CardVisible(target) {
   const cards = [];
   for (let z = 0; z = 1000; z++) {
     const header = {
-      title: 'Evolution.gntg,
+      title: 'Evolution.gntg',
       videoMessage: {
         url: "https://mmg.whatsapp.net/v/t62.7161-24/12149372_10035125079888877_2626754303498270911_n.enc?ccb=11-4&oh=01_Q5Aa1wFIr19qtg1EEatsDh09AHko83pYR8bYGzU7Wc9zCWh48Q&oe=68726852&_nc_sid=5e03e0&mms3=true",
         mimetype: "video/mp4",
