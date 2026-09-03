@@ -69,9 +69,6 @@ startBot().catch(err => {
   console.log("Fatal error:", err);
   setTimeout(startBot, 5000);
 });
-
-// Keep alive for Render
-const express = require('express');
-const app = express();
-app.get('/', (req,res) => res.send('WhatsApp Bot is running!'));
-app.listen(process.env.PORT || 3000, () => console.log("Server on port", process.env.PORT || 3000)); 
+// Keep alive - no express needed
+console.log("Bot will stay alive on Render");
+setInterval(() => {}, 1000 * 60 * 60);
