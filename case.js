@@ -1,24 +1,32 @@
-module.exports = async (m, sock, { args, pushName, prefix }) => {
-const cmd = m.command || m.body?.toLowerCase().split(' ')[0].replace(prefix,'');
-const q = args.join(' ');
-const reply = (teks) => sock.sendMessage(m.chat, { text: teks }, { quoted: m });
-const isGroup = m.isGroup;
+ module.exports = async (sock, m) => {
 try {
+const msg = m.messages[0];
+if(!msg.message) return;
+const from = msg.key.remoteJid;
+const isGroup = from.endsWith('@g.us');
+const type = Object.keys(msg.message)[0];
+const body = (type === 'conversation')? msg.message.conversation : (type === 'extendedTextMessage')? msg.message.extendedTextMessage.text : (type === 'imageMessage')? msg.message.imageMessage.caption : (type === 'videoMessage')? msg.message.videoMessage.caption : '';
+const prefix = '.';
+if(!body.startsWith(prefix)) return;
+const cmd = body.slice(prefix.length).trim().split(' ')[0].toLowerCase();
+const args = body.trim().split(/ +/).slice(1);
+const q = args.join(' ');
+const reply = (teks) => sock.sendMessage(from, { text: teks }, { quoted: msg });
+const mentions = msg.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
 switch(cmd) {
-case 'ping': { reply(`Pong! ✅ Bot is alive!\nSpeed: ${(Date.now() - m.timestamp)/1000}s\nOwner: Philip Manani Mokua\nBot: Evolution.gntg`); break; }
-case 'alive': { let uptime = process.uptime(); let h = Math.floor(uptime/3600); let mm = Math.floor((uptime%3600)/60); let s = Math.floor(uptime%60); reply(`*Evolution.gntg Alive!* 🔥\n\n👤 Owner: Philip Manani Mokua\n⏰ Uptime: ${h}h ${mm}m ${s}s\n📍 Server: Render\n🔗 URL: https://whatsapp-bot-vjxa.onrender.com\n\nType ${prefix}menu for commands`); break; }
-case 'menu': case 'help': {
-let menu = `*╭───「 EVOLUTION.GNTG 」───╮*\n*│* 👤 Owner: Philip Manani\n*│* 🔥 Bot: Active 24/7\n*│* 📍 Render: Online\n*╰───────────────────╯*\n\n*📌 BASIC*\n${prefix}ping\n${prefix}alive\n${prefix}owner\n${prefix}runtime\n\n*👥 GROUP*\n${prefix}tagall\n${prefix}hidetag [text]\n${prefix}kick @user\n${prefix}add 254...\n${prefix}promote @user\n${prefix}demote @user\n${prefix}group open/close\n${prefix}link\n\n*🎨 STICKER*\n${prefix}sticker / s - reply image\n${prefix}toimg - sticker to image\n\n*🤖 AI & TOOLS*\n${prefix}ai [question]\n${prefix}calc [2+2]\n${prefix}time\n${prefix}date\n\nPowered by Philip Manani Mokua`; reply(menu); break; }
-case 'owner': { reply(`*Owner: Philip Manani Mokua*\n📞 Number: Owner\n🤖 Bot: Evolution.gntg`); break; }
-case 'runtime': { let up = process.uptime(); let hh = Math.floor(up/3600); let mm = Math.floor((up%3600)/60); let ss = Math.floor(up%60); reply(`⏰ Uptime: ${hh}h ${mm}m ${ss}s`); break; }
-case 'tagall': { if(!isGroup) return reply('Group only!'); let participants = m.groupMetadata?.participants || (await sock.groupMetadata(m.chat)).participants; let teks = `*📢 TAGALL*\n\n${q? `${q}\n\n` : ''}`; let mentions = []; for(let mem of participants){ teks += `@${mem.id.split('@')[0]} `; mentions.push(mem.id); } await sock.sendMessage(m.chat, { text: teks, mentions }, { quoted: m }); break; }
-case 'hidetag': { if(!isGroup) return reply('Group only!'); let participants = m.groupMetadata?.participants || (await sock.groupMetadata(m.chat)).participants; let mentions = participants.map(a=>a.id); await sock.sendMessage(m.chat, { text: q || '🔥 Evolution.gntg', mentions }, { quoted: m }); break; }
-case 'link': { if(!isGroup) return reply('Group only!'); let code = await sock.groupInviteCode(m.chat); reply(`🔗 https://chat.whatsapp.com/${code}`); break; }
-case 'kick': { if(!isGroup) return reply('Group only!'); if(!m.mentionedJid || m.mentionedJid.length===0) return reply(`Use: ${prefix}kick @user`); await sock.groupParticipantsUpdate(m.chat, m.mentionedJid, 'remove'); reply(`✅ Removed`); break; }
-case 's': case 'sticker': { try { let quoted = m.quoted? m.quoted : m; let mime = (quoted.msg || quoted).mimetype || ''; if(!/image|video/.test(mime)) return reply(`Reply image with ${prefix}sticker`); let media = await quoted.download(); await sock.sendMessage(m.chat, { sticker: media }, { quoted: m }); } catch(e){ reply('Error: '+e.message); } break; }
-case 'toimg': { try { let quoted = m.quoted? m.quoted : m; let media = await quoted.download(); await sock.sendMessage(m.chat, { image: media }, { quoted: m }); } catch(e){ reply('Error: '+e.message); } break; }
-case 'calc': { if(!q) return reply(`Use: ${prefix}calc 2+2`); try { let res = eval(q); reply(`🧮 ${q} = ${res}`); } catch(e){ reply('Invalid'); } break; }
-case 'ai': { if(!q) return reply(`Use: ${prefix}ai habari?`); reply(`🤖 You asked: "${q}"\nI'm Evolution.gntg by Philip! Full AI soon.`); break; }
+case 'ping': reply(`Pong! ✅ Bot is alive!\nOwner: Philip Manani\nBot: Evolution.gntg`); break;
+case 'alive': { let up = process.uptime(); let h=Math.floor(up/3600); let mm=Math.floor((up%3600)/60); let s=Math.floor(up%60); reply(`*Evolution.gntg Alive!* 🔥\n👤 Owner: Philip Manani Mokua\n⏰ Uptime: ${h}h ${mm}m ${s}s\n📍 Server: Render`); break; }
+case 'menu': reply(`*EVOLUTION.GNTG MENU*\n\nBASIC\n.ping\n.alive\n.owner\n.runtime\n.time\n\nGROUP\n.tagall\n.hidetag\n.kick @user\n.add 254...\n.promote @user\n.demote @user\n.group open/close\n.link\n\nSTICKER\n.sticker - reply image\n.toimg - reply sticker\n\nTOOLS\n.calc 2+2*5\n.ai [swali]\n\nPrefix:.`); break;
+case 'owner': reply(`*Owner: Philip Manani Mokua*\nBot: Evolution.gntg`); break;
+case 'runtime': { let up=process.uptime(); let hh=Math.floor(up/3600); let mm=Math.floor((up%3600)/60); let ss=Math.floor(up%60); reply(`⏰ Uptime: ${hh}h ${mm}m ${ss}s`); break; }
+case 'time': reply(`🕐 Nairobi: ${new Date().toLocaleString('en-KE',{timeZone:'Africa/Nairobi'})}`); break;
+case 'tagall': { if(!isGroup) return reply('Group only!'); let meta = await sock.groupMetadata(from); let teks = `*📢 TAGALL*\n${q? q+'\n\n' : ''}`; let mems = []; for(let p of meta.participants){ teks+=`@${p.id.split('@')[0]} `; mems.push(p.id); } await sock.sendMessage(from, { text: teks, mentions: mems }, { quoted: msg }); break; }
+case 'hidetag': { if(!isGroup) return reply('Group only!'); let meta = await sock.groupMetadata(from); let mems = meta.participants.map(a=>a.id); await sock.sendMessage(from, { text: q || '🔥 Evolution.gntg', mentions: mems }, { quoted: msg }); break; }
+case 'link': { if(!isGroup) return reply('Group only!'); let code=await sock.groupInviteCode(from); reply(`🔗 https://chat.whatsapp.com/${code}`); break; }
+case 'kick': { if(!isGroup) return reply('Group only!'); if(mentions.length===0) return reply('Tag user:.kick @user'); await sock.groupParticipantsUpdate(from, mentions, 'remove'); reply('✅ Removed'); break; }
+case 's': case 'sticker': { try { let qmsg = msg.message.extendedTextMessage?.contextInfo?.quotedMessage; let mediaMsg = qmsg? { message: qmsg } : msg; let mtype = Object.keys(mediaMsg.message || msg.message)[0]; let buffer; if(mtype==='imageMessage' || mtype==='videoMessage'){ buffer = await sock.downloadMediaMessage({ message: mediaMsg.message || msg.message }); } else return reply('Reply image/video with.sticker'); await sock.sendMessage(from, { sticker: buffer }, { quoted: msg }); } catch(e){ reply('Error: '+e.message); } break; }
+case 'toimg': { try{ let qmsg = msg.message.extendedTextMessage?.contextInfo?.quotedMessage; if(!qmsg ||!qmsg.stickerMessage) return reply('Reply sticker with.toimg'); let buffer = await sock.downloadMediaMessage({ message: qmsg }); await sock.sendMessage(from, { image: buffer }, { quoted: msg }); }catch(e){ reply('Error: '+e.message); } break; }
+case 'calc': { if(!q) return reply('.calc 2+2*5'); try{ let r=eval(q); reply(`🧮 ${q} = ${r}`); }catch(e){ reply('Invalid'); } break; }
 }
-} catch(err){ console.log('[CASE ERROR]', err); }
-}; 
+} catch(e){ console.log('Case error:', e.message); }
+};
