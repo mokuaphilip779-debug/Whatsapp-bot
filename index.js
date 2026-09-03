@@ -1,4 +1,9 @@
- const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys')
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 10000;
+app.get('/', (req, res) => res.send('<h1>Morara Bot V2 Active - Private Mode 🔥</h1>'));
+app.listen(PORT, () => console.log(`Web server running on ${PORT}`));
+// HAPA NDIPO CODE YANGU YA V2 INAANZIA const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys')
 const P = require('pino')
 const fs = require('fs')
 
