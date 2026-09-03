@@ -1,4 +1,4 @@
- const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+require('http').createServer((req,res)=>res.end("Bot is running!")).listen(process.env.PORT||3000); const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
 const P = require('pino');
 const fs = require('fs');
 const settings = require('./settings');
