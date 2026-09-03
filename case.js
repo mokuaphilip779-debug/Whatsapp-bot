@@ -1,45 +1,41 @@
- module.exports = async (client, m, chatUpdate, store) => {
+module.exports = async (client, m, chatUpdate, store) => {
   try {
-    const body = m.mtype === 'conversation' ? m.message.conversation : m.mtype === 'imageMessage' ? m.message.imageMessage.caption : m.mtype === 'videoMessage' ? m.message.videoMessage.caption : m.mtype === 'extendedTextMessage' ? m.message.extendedTextMessage.text : m.mtype === 'buttonsResponseMessage' ? m.message.buttonsResponseMessage.selectedButtonId : m.mtype === 'listResponseMessage' ? m.message.listResponseMessage.singleSelectReply.selectedRowId : m.mtype === 'templateButtonReplyMessage' ? m.message.templateButtonReplyMessage.selectedId : m.mtype === 'messageContextInfo' ? m.message.buttonsResponseMessage?.selectedButtonId || m.message.listResponseMessage?.singleSelectReply.selectedRowId || m.text : '';
-    const budy = typeof m.text == 'string' ? m.text : '';
-    const prefix = /^[\\/!#.]/gi.test(body) ? body.match(/^[\\/!#.]/gi) : '/';
-    const isCmd = body.startsWith(prefix);
-    const command = body.replace(prefix, '').trim().split(/ +/).shift().toLowerCase();
-    const args = body.trim().split(/ +/).slice(1);
+    const from = m.chat || m.key.remoteJid;
     
-    const from = m.chat;
+    // Chukua message vizuri
+    let body = '';
+    if (m.mtype === 'conversation') body = m.message.conversation;
+    else if (m.mtype === 'extendedTextMessage') body = m.message.extendedTextMessage.text;
+    else if (m.mtype === 'imageMessage') body = m.message.imageMessage.caption || '';
+    else if (m.text) body = m.text;
+    else body = '';
 
-    async function CardVisible(target) {
-      const cards = [];
-      for (let z = 0; z < 1; z++) {
-        const header = {
-          title: 'Evolution.gntg',
-          videoMessage: {
-            url: "https://mmg.whatsapp.net/v/t62.7161-24/12145.mp4",
-            mimetype: "video/mp4",
-            fileLength: 999999,
-            seconds: 999999,
-            mediaKey: "fake",
-            height: 999999,
-            width: 999999
-          }
-        };
-        cards.push(header);
-      }
-      return cards;
-    }
+    if (!body) return;
+
+    console.log(`[MESSAGE] ${from}: ${body}`);
+
+    // Ondoa prefix / ! . # kama ipo, kama haipo tumia direct
+    let command = body.trim().toLowerCase();
+    command = command.replace(/^[./!#]/, '').split(/ +/).shift();
+
+    console.log(`[COMMAND] ${command}`);
 
     switch(command) {
       case 'ping':
-        await client.sendMessage(from, { text: 'Pong! Bot is alive ✅\nEvolution.gntg' }, { quoted: m });
+      case 'alive':
+        await client.sendMessage(from, { text: 'Pong! Bot is alive ✅\nEvolution.gntg' });
         break;
       case 'menu':
-        await client.sendMessage(from, { text: '*Evolution.gntg Menu*\n\n/ping - check bot\n/menu - this menu' }, { quoted: m });
+        await client.sendMessage(from, { text: '*Evolution.gntg Menu*\n\n/ping - check bot\n/menu - this menu\n/alive - bot status\n\nBot by Philip Wafula 🔥' });
         break;
       default:
+        // Auto reply kama si command
+        if (body.toLowerCase().includes('hi') || body.toLowerCase().includes('hello')) {
+          await client.sendMessage(from, { text: 'Hello! 👋 Send /menu' });
+        }
         break;
     }
   } catch (err) {
-    console.log(err);
+    console.log('CASE ERROR:', err);
   }
-};
+}; 
