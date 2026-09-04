@@ -1,40 +1,57 @@
  const http = require('http');
-http.createServer((_,res)=>res.end('Bot Running')).listen(process.env.PORT || 10000);
+http.createServer((_,res)=>res.end('Bot Running')).listen(process.env.PORT||10000);
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const P = require('pino');
 const fs = require('fs');
+const { File } = require('megajs');
+
+async function downloadMegaSession(megaCode){
+  const megaUrl = `https://mega.nz/file/${megaCode}`;
+  const file = File.fromURL(megaUrl);
+  return new Promise((resolve,reject)=>{
+    let data='';
+    file.download((err, stream)=>{
+      if(err) return reject(err);
+      stream.on('data', c=> data+=c.toString());
+      stream.on('end', ()=> resolve(data));
+      stream.on('error', reject);
+    });
+  });
+}
 
 async function bot(){
  if(process.env.SESSION_ID){
   try{
-   let b64 = process.env.SESSION_ID.trim();
-   // Toa prefix kama ni MEGA-MD_ au GlobalTechInfo
-   if(b64.includes('MEGA-MD_')) b64 = b64.split('MEGA-MD_')[1];
-   if(b64.includes('~')) b64 = b64.split('~').pop();
-   if(b64.includes('/')) b64 = b64.split('/').pop();
-   const json = Buffer.from(b64, 'base64').toString();
+   let txt = process.env.SESSION_ID.trim();
+   let credsData;
+   if(txt.includes('MEGA-MD') || txt.includes('GlobalTechInfo')){
+     let code = txt.split('/').pop().split('_').pop().replace('~','');
+     if(txt.includes('~')) code = txt.split('~').pop();
+     console.log('Downloading MEGA session...', code.slice(0,10));
+     credsData = await downloadMegaSession(code);
+   }else{
+     credsData = Buffer.from(txt, 'base64').toString();
+   }
    if(!fs.existsSync('./session')) fs.mkdirSync('./session');
-   fs.writeFileSync('./session/creds.json', json);
+   fs.writeFileSync('./session/creds.json', credsData);
    console.log('✅ Session loaded from ENV');
   }catch(e){ console.log('Session ENV error', e.message) }
  }
-
  const {state,saveCreds} = await useMultiFileAuthState('./session');
  const sock = makeWASocket({
    auth: state,
    logger: P({level: 'silent'}),
    syncFullHistory: false,
    markOnlineOnConnect: false,
-   shouldSyncHistoryMessage: ()=> false,
-   printQRInTerminal: false
+   shouldSyncHistoryMessage: ()=> false
  });
  sock.ev.on('creds.update', saveCreds);
  sock.ev.on('connection.update', u=>{
   if(u.connection==='open') console.log('✅ MORARA CONNECTED & ACTIVE');
   if(u.connection==='close'){
-    const reason = u.lastDisconnect?.error?.output?.statusCode;
-    console.log('Connection closed', reason);
-    if(reason!== DisconnectReason.loggedOut) bot();
+    const r = u.lastDisconnect?.error?.output?.statusCode;
+    console.log('Closed', r);
+    if(r!==DisconnectReason.loggedOut) setTimeout(bot, 3000);
   }
  });
 }
