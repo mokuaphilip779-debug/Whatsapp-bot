@@ -5,7 +5,8 @@
   "scripts": { "start": "node index.js" },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.18",
-    "pino": "^8.16.2"
+    "pino": "^8.16.2",
+    "megajs": "^1.3.0"
   },
   "engines": { "node": ">=18.0.0" }
 }
