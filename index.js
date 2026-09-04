@@ -1,58 +1,73 @@
- const http = require('http');
-http.createServer((_,res)=>res.end('Bot Running')).listen(process.env.PORT||10000);
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
-const P = require('pino');
-const fs = require('fs');
-const { File } = require('megajs');
+ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
+const pino = require("pino");
+const fs = require("fs");
+const path = require("path");
+const zlib = require("zlib");
 
-async function downloadMegaSession(megaCode){
-  const megaUrl = `https://mega.nz/file/${megaCode}`;
-  const file = File.fromURL(megaUrl);
-  return new Promise((resolve,reject)=>{
-    let data='';
-    file.download((err, stream)=>{
-      if(err) return reject(err);
-      stream.on('data', c=> data+=c.toString());
-      stream.on('end', ()=> resolve(data));
-      stream.on('error', reject);
-    });
+async function loadSession(){
+  const sessionDir = path.join(__dirname, "session");
+  if(!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir,{recursive:true});
+  const credsPath = path.join(sessionDir,"creds.json");
+  let txt = (process.env.SESSION_ID||"").trim();
+  if(!txt) return;
+
+  // Ondoa "KnightBot!" kama ipo
+  if(txt.includes("KnightBot!")){
+    txt = txt.split("\n").pop().trim(); // chukua line ya H4sI
+  }
+  if(txt.includes("~")) txt = txt.split("~")[1];
+
+  try{
+    console.log("Decoding Knight/BASE64 session...");
+    let buffer = Buffer.from(txt, 'base64');
+    // Jaribu ku-unzip kama ni H4sI (gzip)
+    try{ buffer = zlib.gunzipSync(buffer); }catch(e){}
+    let jsonStr = buffer.toString();
+    // Kama bado ni base64 ndani
+    if(!jsonStr.trim().startsWith("{")){
+        try{
+            let b2 = Buffer.from(jsonStr.trim(), 'base64').toString();
+            if(b2.trim().startsWith("{")) jsonStr = b2;
+        }catch{}
+    }
+    const data = JSON.parse(jsonStr);
+    fs.writeFileSync(credsPath, JSON.stringify(data,null,2));
+    console.log("✅ Session loaded from ENV (Knight/BASE64)");
+  }catch(e){
+    console.log("Session decode error:", e.message);
+    // fallback: kama ni JSON direct
+    try{ fs.writeFileSync(credsPath, txt); }catch{}
+  }
+}
+
+async function startBot(){
+  await loadSession();
+  const { state, saveCreds } = await useMultiFileAuthState("session");
+  const { version } = await fetchLatestBaileysVersion();
+  const sock = makeWASocket({
+    version, auth: state,
+    logger: pino({level:"silent"}),
+    printQRInTerminal:false,
+    browser:["MORARA","Chrome","1.0"]
+  });
+  sock.ev.on("creds.update", saveCreds);
+  sock.ev.on("connection.update", async(update)=>{
+    const { connection, lastDisconnect } = update;
+    if(connection==="open"){ console.log("✅ MORARA CONNECTED & ACTIVE"); }
+    if(connection==="close"){
+      const reason = lastDisconnect?.error?.output?.statusCode;
+      if(reason!==DisconnectReason.loggedOut){ console.log("Reconnecting..."); setTimeout(startBot,3000); }
+    }
+  });
+  sock.ev.on("messages.upsert", async({messages})=>{
+    const m = messages[0]; if(!m.message) return;
+    const text = m.message.conversation || m.message.extendedTextMessage?.text || "";
+    const jid = m.key.remoteJid;
+    if(text.toLowerCase()==="menu" || text.toLowerCase()===".menu"){
+      await sock.sendMessage(jid,{text:"*MORARA BOT*\n\n.menU\n.alive\n.ping\n.owner\n\nBot iko LIVE ✅"});
+    }
+    if(text.toLowerCase()===".ping"){ await sock.sendMessage(jid,{text:"Pong! 🏓 Speed: Active"}); }
+    if(text.toLowerCase()===".alive"){ await sock.sendMessage(jid,{text:"MORARA is Alive ✅"}); }
   });
 }
-
-async function bot(){
- if(process.env.SESSION_ID){
-  try{
-   let txt = process.env.SESSION_ID.trim();
-   let credsData;
-   if(txt.includes('MEGA-MD') || txt.includes('GlobalTechInfo')){
-     let code = txt.split('/').pop().split('_').pop().replace('~','');
-     if(txt.includes('~')) code = txt.split('~').pop();
-     console.log('Downloading MEGA session...', code.slice(0,10));
-     credsData = await downloadMegaSession(code);
-   }else{
-     credsData = Buffer.from(txt, 'base64').toString();
-   }
-   if(!fs.existsSync('./session')) fs.mkdirSync('./session');
-   fs.writeFileSync('./session/creds.json', credsData);
-   console.log('✅ Session loaded from ENV');
-  }catch(e){ console.log('Session ENV error', e.message) }
- }
- const {state,saveCreds} = await useMultiFileAuthState('./session');
- const sock = makeWASocket({
-   auth: state,
-   logger: P({level: 'silent'}),
-   syncFullHistory: false,
-   markOnlineOnConnect: false,
-   shouldSyncHistoryMessage: ()=> false
- });
- sock.ev.on('creds.update', saveCreds);
- sock.ev.on('connection.update', u=>{
-  if(u.connection==='open') console.log('✅ MORARA CONNECTED & ACTIVE');
-  if(u.connection==='close'){
-    const r = u.lastDisconnect?.error?.output?.statusCode;
-    console.log('Closed', r);
-    if(r!==DisconnectReason.loggedOut) setTimeout(bot, 3000);
-  }
- });
-}
-bot();
+startBot();
