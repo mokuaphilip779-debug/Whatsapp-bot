@@ -1,4 +1,9 @@
- const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
+ const express = require("express");
+const app = express();
+app.get("/", (req,res)=> res.send("MORARA BOT IS LIVE ✅"));
+app.listen(process.env.PORT || 10000, ()=> console.log("Port listening"));
+
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const fs = require("fs");
 const path = require("path");
@@ -11,6 +16,12 @@ async function loadSession(){
   if(env.startsWith("{")){
     fs.writeFileSync(credsPath, env);
     console.log("✅ Session loaded from ENV (JSON)");
+  } else if(env){
+    // jaribu kama ni file creds.json ilikuwa base64
+    try{
+      const buff = Buffer.from(env, 'base64').toString();
+      if(buff.trim().startsWith("{")){ fs.writeFileSync(credsPath, buff); console.log("✅ Session loaded BASE64"); return; }
+    }catch{}
   }
 }
 
@@ -36,7 +47,8 @@ async function startBot(){
     if(txt.toLowerCase()==="menu" || txt.toLowerCase()===".menu"){
       await sock.sendMessage(jid,{text:"*MORARA BOT LIVE ✅*\n\n.menu\n.ping\n.alive"});
     }
-    if(txt.toLowerCase()===".ping") await sock.sendMessage(jid,{text:"Pong! 🏓"});
+    if(txt.toLowerCase()===".ping") await sock.sendMessage(jid,{text:"Pong! 🏓 Bot iko fiti"});
+    if(txt.toLowerCase()===".alive") await sock.sendMessage(jid,{text:"MORARA is Alive ✅"});
   });
 }
 startBot();
